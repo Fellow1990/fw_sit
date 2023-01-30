@@ -1,7 +1,5 @@
 local seatsTaken = {}
 
-TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-
 RegisterNetEvent('esx_sit:takePlace')
 AddEventHandler('esx_sit:takePlace', function(objectCoords)
 	seatsTaken[objectCoords] = true
