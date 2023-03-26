@@ -8,7 +8,7 @@ end, false)
 
 RegisterKeyMapping('wakeup', 'Wake up', 'keyboard', Config.Keyboard)
 
-Citizen.CreateThread(function()
+CreateThread(function()
 	local Sitables = {}
 	for k,v in pairs(Config.Interactables) do
 		local model = GetHashKey(v)
@@ -20,8 +20,8 @@ Citizen.CreateThread(function()
 			icon = Config.Visual.icon,
 			label = Config.Visual.label,
 			event = "esx_sit:sit",
+			Distance = Config.MaxDistance
 		},
-		Distance = Config.MaxDistance
 	})
 end)
 
