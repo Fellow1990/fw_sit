@@ -9,5 +9,5 @@ https://fellow-store.tebex.io/
 
 
 
-][cc-by-nc-sa].
+
 
