@@ -1,4 +1,6 @@
 # esx_sit
 Rework to official esx_sit
 
-Discord: https://discord.gg/wewesnerQd
+🌍 FiveM | Francophone
+
+https://discord.gg/wewesnerQd
