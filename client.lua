@@ -1,4 +1,4 @@
-local sitting, currentSitCoords, currentScenario = {}
+local sitting, Sitables, currentSitCoords, currentScenario = false, {}, nil, nil
 local disableControls = false
 local currentObj = nil
 
@@ -8,25 +8,21 @@ end, false)
 
 RegisterKeyMapping('wakeup', 'Wake up', 'keyboard', Config.Keyboard)
 
-CreateThread(function()
-	local Sitables = {}
-	for k,v in pairs(Config.Interactables) do
-		local model = GetHashKey(v)
-		table.insert(Sitables, model)
-	end
-	Wait(100)
-	exports.ox_target:addModel(Sitables, {
-		{
-			icon = Config.Visual.icon,
-			label = Config.Visual.label,
-			event = "esx_sit:sit",
-			Distance = Config.MaxDistance
-		},
-	})
-end)
+for k,v in pairs(Config.Interactables) do
+	local model = GetHashKey(v)
+	Sitables[#Sitables+1] = model
+end
+exports.ox_target:addModel(Sitables, {
+	{
+		icon = Config.Visual.icon,
+		label = Config.Visual.label,
+		event = "fw_sit:sit",
+		Distance = Config.MaxDistance
+	},
+})
 
-RegisterNetEvent("esx_sit:sit")
-AddEventHandler("esx_sit:sit", function()
+RegisterNetEvent("fw_sit:sit")
+AddEventHandler("fw_sit:sit", function()
 	if sitting and not IsPedUsingScenario(PlayerPedId(), currentScenario) then
 		wakeup()
 	end
@@ -66,7 +62,7 @@ function wakeup()
 	ClearPedTasks(PlayerPedId())
 	FreezeEntityPosition(PlayerPedId(), false)
 	FreezeEntityPosition(currentObj, false)
-	TriggerServerEvent('esx_sit:leavePlace', currentSitCoords)
+	TriggerServerEvent('fw_sit:leavePlace', currentSitCoords)
 	currentSitCoords, currentScenario = nil, nil
 	sitting = false
 	disableControls = false
@@ -83,23 +79,22 @@ function sit(object, modelName, data)
 	local pos = GetEntityCoords(object)
 	local playerPos = GetEntityCoords(PlayerPedId())
 	local objectCoords = pos.x .. pos.y .. pos.z
-	ESX.TriggerServerCallback('esx_sit:getPlace', function(occupied)
-		if occupied then
-			lib.notify({
-				title = Config.Visual.notification,
-				type = 'info'
-			})
-		else
-			lastPos, currentSitCoords = GetEntityCoords(PlayerPedId()), objectCoords
-			TriggerServerEvent('esx_sit:takePlace', objectCoords)
-			currentScenario = data.scenario
-			TaskStartScenarioAtPosition(PlayerPedId(), currentScenario, pos.x, pos.y, pos.z + (playerPos.z - pos.z)/2, GetEntityHeading(object) + 180.0, 0, true, false)
-			Citizen.Wait(2500)
-			if GetEntitySpeed(PlayerPedId()) > 0 then
-				ClearPedTasks(PlayerPedId())
-				TaskStartScenarioAtPosition(PlayerPedId(), currentScenario, pos.x, pos.y, pos.z + (playerPos.z - pos.z)/2, GetEntityHeading(object) + 180.0, 0, true, true)
-			end
-			sitting = true
+	local occupied = lib.callback.await('fw_sit:getPlace', false, objectCoords)
+	if occupied then
+		lib.notify({
+			title = Config.Visual.notification,
+			type = 'info'
+		})
+	else
+		lastPos, currentSitCoords = GetEntityCoords(PlayerPedId()), objectCoords
+		TriggerServerEvent('fw_sit:takePlace', objectCoords)
+		currentScenario = data.scenario
+		TaskStartScenarioAtPosition(PlayerPedId(), currentScenario, pos.x, pos.y, pos.z + (playerPos.z - pos.z)/2, GetEntityHeading(object) + 180.0, 0, true, false)
+		Citizen.Wait(2500)
+		if GetEntitySpeed(PlayerPedId()) > 0 then
+			ClearPedTasks(PlayerPedId())
+			TaskStartScenarioAtPosition(PlayerPedId(), currentScenario, pos.x, pos.y, pos.z + (playerPos.z - pos.z)/2, GetEntityHeading(object) + 180.0, 0, true, true)
 		end
-	end, objectCoords)
+		sitting = true
+	end
 end
